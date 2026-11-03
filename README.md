@@ -9,15 +9,52 @@ EDINET API v2 を使って有価証券報告書などの開示書類を扱う MC
 > **Unofficial.** This project is not affiliated with or endorsed by the Financial Services
 > Agency (金融庁), which operates EDINET.
 
-**Status:** work in progress. The snapshot builder works; the MCP server is not built yet.
+**Status:** work in progress (0.1.0.dev0). The server, the skill and the snapshot builder work;
+not yet published.
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `src/edinet_util_mcp_server/` | The package: API client (`api`), code list (`codelist`), key figures from the type-5 CSV (`figures`) |
+| `src/edinet_util_mcp_server/` | The package: the MCP server (`server`, `guideline`), filing export (`export`, `convert`), API client (`api`), code list (`codelist`), key figures from the type-5 CSV (`figures`) |
 | `tools/build_profiles.py`, `tools/snapshot/` | The snapshot builder, a development tool not shipped in the wheel |
-| `skill/edinet-company-profiles/` | The skill; the builder writes its database to `data/edinet_profiles.sqlite` (not in git) |
+| `skill/edinet-company-profiles/` | The skill: `SKILL.md`, `scripts/edinet_profiles.py` (standard library only), `references/financial_diagnosis.md`, `NOTICE`; the builder writes its database to `data/edinet_profiles.sqlite` (not in git) |
+
+## The server
+
+A skill-style MCP server over stdio, with the user's own API key:
+
+| Tool | Does |
+|---|---|
+| `load_guideline` | How the tools work together, the conditions of use |
+| `list_filings` | Filings submitted between two dates (at most 31 days), filtered by company or document type |
+| `export_filing` | One filing → Markdown files: `index.md`, `figures.md`, `sections/`, `images/` |
+
+Settings (environment variables): `EDINET_API_KEY` (required) and `EDINET_OUTPUT_DIR`
+(default `~/Documents/EDINET`), the only place the server writes. Run it with
+`python -m edinet_util_mcp_server`; Kari finds the command through the `kari.mcp_servers`
+entry point.
+
+## The skill
+
+`skill/edinet-company-profiles/` is a standard `SKILL.md` folder. Copy it, with its database,
+into `~/.agents/skills/` (Kari's main app) or import it in an Agent Desk. Its script opens the
+database read-only in place:
+
+```sh
+python skill/edinet-company-profiles/scripts/edinet_profiles.py compare 5586 --peers "ABEJA,エクサウィザーズ"
+```
+
+Commands: `company`, `peers`, `compare`, `filings`, `sql`, `about` (`--json` for structured
+output).
+
+## Tests
+
+```sh
+../../.venv/bin/pytest            # offline
+EDINET_LIVE=1 ../../.venv/bin/pytest tests/test_live.py   # real API over stdio, key from .env
+../../.venv/bin/ruff check src tests tools skill
+```
 
 ## Building the snapshot
 

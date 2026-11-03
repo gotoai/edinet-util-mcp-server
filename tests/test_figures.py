@@ -185,3 +185,17 @@ def test_basis_can_be_overridden_for_a_new_consolidator():
     separate = figures.extract(facts, consolidated=False)
     assert separate.basis == "non-consolidated"
     assert [y.values["revenue"] for y in separate.years] == [1892, 1515, 1369]
+
+
+def test_new_consolidator_net_income_comes_from_the_non_consolidated_half():
+    summary = "jpcrp_cor:{}SummaryOfBusinessResults"
+    facts = figures.parse_facts(figures.report_csv_text(csv_zip([
+        *dei(consolidated="true"),
+        fact(summary.format("ProfitLossAttributableToOwnersOfParent"), "CurrentYearDuration",
+             "146", label="親会社株主に帰属する当期純利益"),
+        *[fact(summary.format("NetIncomeLoss"), f"{p}Duration_NonConsolidatedMember", v,
+               label="当期純利益")
+          for p, v in (("CurrentYear", "200"), ("Prior1Year", "133"), ("Prior2Year", "139"))],
+    ])))
+    separate = figures.extract(facts, consolidated=False)
+    assert [y.values["net_income"] for y in separate.years] == [200, 133, 139]

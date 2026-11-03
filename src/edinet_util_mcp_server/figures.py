@@ -266,10 +266,13 @@ def extract(facts: list[Fact], *, consolidated: bool | None = None) -> AnnualFig
         if revenue_base:
             break
 
+    # The half comes before the element name: on the non-consolidated basis a new
+    # consolidator's NetIncomeLoss (non-consolidated, five years) must win over its
+    # ProfitLossAttributableToOwnersOfParent (consolidated, one year).
     for name, spec in SUMMARY_FIELDS.items():
-        for candidate in spec.names:
+        for noncons in halves(spec.company_level):
             found = False
-            for noncons in halves(spec.company_level):
+            for candidate in spec.names:
                 for fact, match in summary:
                     if (fact.summary_base == candidate and fact.unit == spec.unit
                             and match["kind"] == spec.kind

@@ -1,0 +1,16 @@
+edinet-company-profiles
+
+Code (scripts/): MIT License, Copyright (c) 2026 GotoAI Inc. See the LICENSE file of
+edinet-util-mcp-server.
+
+Data (data/edinet_profiles.sqlite): processed data derived from documents filed on
+EDINET, used under the Public Data License (Version 1.0) (公共データ利用規約 第1.0版).
+
+  出典：EDINET閲覧（提出）サイト（https://disclosure2.edinet-fsa.go.jp/）、PDL1.0（https://www.digital.go.jp/resources/open_data/public_data_license_v1.0）
+  EDINET閲覧（提出）サイトの提出書類をもとに GotoAI が加工して作成
+
+The data is processed: figures are read from the XBRL-to-CSV files of each company's
+latest annual report, peer candidates are computed, and the filing index is a
+selection of EDINET's daily document lists. It is not the original data and must not
+be presented as unaltered government data. The snapshot date is in the database's
+manifest table (`scripts/edinet_profiles.py about`).
