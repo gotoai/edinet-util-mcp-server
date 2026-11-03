@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Snapshot build output (released separately, not in git)
+skill/*/data/*.sqlite
+
+# macOS
+.DS_Store
