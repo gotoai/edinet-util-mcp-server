@@ -16,7 +16,8 @@ EDINET の有価証券報告書から作った、上場企業のデータベー�
   探す（`list_filings`）。本文や、データベースにない数値（有利子負債、設備投資、研究開発費、
   セグメント別）はこちらで読みます。
 
-同業比較や財務診断を頼まれたら、まず `references/financial_diagnosis.md` を読んでください。
+同業比較や財務診断を頼まれたら、まずスキルのフォルダの `references/financial_diagnosis.md` を
+読んでください（ファイルを読むツールがなければ、python_run で開いて print します）。
 
 ## 使い方
 
@@ -26,11 +27,11 @@ Kari では python_run で、スキルのフォルダ（読み込み時に表示
 ```python
 import runpy
 profiles = runpy.run_path("<Skill directory>/scripts/edinet_profiles.py")
-status, text = profiles["run"](["compare", "5586"])
+status, text = profiles["run"](["compare", "7203"])
 print(text)
 ```
 
-シェルが使える環境では `python scripts/edinet_profiles.py compare 5586` でも同じです。
+シェルが使える環境では `python scripts/edinet_profiles.py compare 7203` でも同じです。
 標準ライブラリだけで動きます。
 
 | コマンド | 返すもの |
@@ -42,11 +43,11 @@ print(text)
 | `sql "SELECT …"` | 上で足りないときの読み取り専用クエリ（表と列は `about` に） |
 | `about` | スナップショットの時点、件数、出所、表と列 |
 
-- `<会社>` は証券コード（5586、5586.T、55860）、EDINETコード（E38755）、社名の一部（漢字・カナ・
+- `<会社>` は証券コード（7203、7203.T、72030）、EDINETコード（E02144）、社名の一部（漢字・カナ・
   英語）のどれでも構いません。候補が複数あると一覧を返すので、コードで選び直してください。
 - `--json` をつけると構造化データで返ります。
 - `compare --peers` には利用者が挙げた同業他社を渡します。足りない分は同業候補の上位から順に
-  補います（`-n` が合計の社数）。比較できない会社は理由つきで「外した企業」に出ます。
+  補います（`-n` は対象を除いた比較企業の数で、既定は5社）。比較できない会社は理由つきで「外した企業」に出ます。
 
 ## 数値の読み方
 

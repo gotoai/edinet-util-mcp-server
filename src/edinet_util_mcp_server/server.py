@@ -137,10 +137,10 @@ async def list_filings(
         str | None, Field(description="Last submission date, YYYY-MM-DD; default from_date.")
     ] = None,
     edinet_code: Annotated[
-        str | None, Field(description="Only this filer, e.g. E01152.", max_length=6)
+        str | None, Field(description="Only this filer, e.g. E02144.", max_length=6)
     ] = None,
     sec_code: Annotated[
-        str | None, Field(description="Only this securities code, e.g. 5208.", max_length=6)
+        str | None, Field(description="Only this securities code, e.g. 7203.", max_length=6)
     ] = None,
     filer_name: Annotated[
         str | None, Field(description="Only filers whose name contains this.", max_length=100)
@@ -162,10 +162,10 @@ async def list_filings(
         raise ToolError(f"EDINET lists filings of the last {HISTORY_YEARS} years only.")
     code = (edinet_code or "").strip().upper()
     if code and not re.fullmatch(r"E\d{5}", code):
-        raise ToolError("edinet_code looks like E01152.")
+        raise ToolError("edinet_code looks like E02144.")
     security = unicodedata.normalize("NFKC", sec_code or "").strip().upper().removesuffix(".T")
     if security and not re.fullmatch(r"[0-9][0-9A-Z]{3}[0-9]?", security):
-        raise ToolError("sec_code looks like 5208 (4 characters, as quoted).")
+        raise ToolError("sec_code looks like 7203 (4 characters, as quoted).")
     name = unicodedata.normalize("NFKC", filer_name or "").strip().lower()
     types = set(doc_types or [])
 
@@ -250,7 +250,7 @@ def _date(text: str) -> date:
                                 idempotentHint=True, openWorldHint=True),
 )
 async def export_filing(
-    doc_id: Annotated[str, Field(description="The filing's doc_id, e.g. S100YCDM.",
+    doc_id: Annotated[str, Field(description="The filing's doc_id, e.g. S100Y8NY.",
                                  max_length=8)],
     refresh: Annotated[bool, Field(description="Download and convert again.")] = False,
 ) -> dict[str, Any]:

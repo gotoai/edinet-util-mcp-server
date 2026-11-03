@@ -199,3 +199,15 @@ def test_new_consolidator_net_income_comes_from_the_non_consolidated_half():
     ])))
     separate = figures.extract(facts, consolidated=False)
     assert [y.values["net_income"] for y in separate.years] == [200, 133, 139]
+
+
+def test_a_payout_ratio_tagged_as_a_percentage_is_left_out():
+    summary = "jpcrp_cor:{}SummaryOfBusinessResults"
+    facts = figures.parse_facts(figures.report_csv_text(csv_zip([
+        *dei(consolidated="false"),
+        *[fact(summary.format("PayoutRatio"), f"{p}Duration_NonConsolidatedMember", v, unit="pure")
+          for p, v in (("CurrentYear", "48.207"), ("Prior1Year", "0.503"))],
+    ])))
+    years = {y.offset: y.values for y in figures.extract(facts).years}
+    assert "payout_ratio" not in years.get(0, {})
+    assert years[1]["payout_ratio"] == 0.503

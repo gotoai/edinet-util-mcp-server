@@ -8,7 +8,7 @@
     python scripts/edinet_profiles.py sql "SELECT ..."
     python scripts/edinet_profiles.py about
 
-<query> is a securities code (5586, 5586.T, 55860), an EDINET code (E38755) or part
+<query> is a securities code (7203, 7203.T, 72030), an EDINET code (E02144) or part
 of the company name (漢字, カナ or English). Output is Markdown; add --json for
 structured output. Every output ends with the source credit, the processing notice
 and the snapshot's as-of date.
@@ -38,6 +38,8 @@ DB_PATH = Path(__file__).resolve().parent.parent / "data" / "edinet_profiles.sql
 DEFAULT_PEERS = 5
 MAX_PEERS = 10
 DEFAULT_SQL_ROWS = 200
+# A cell whose company has the figure for an earlier year but not the latest.
+MISSING_LATEST = "最新期の値なし"
 
 STATUS_NOTES = {
     "ok": "",
@@ -169,7 +171,7 @@ def resolve(all_companies: list[dict[str, Any]], query: str) -> dict[str, Any]:
 
 
 def code4(company: dict[str, Any]) -> str:
-    """The securities code as quoted (5586), not EDINET's 5-character form (55860)."""
+    """The securities code as quoted (7203), not EDINET's 5-character form (72030)."""
     sec = company.get("sec_code") or ""
     return sec[:4] if len(sec) == 5 else (sec or "—")
 
@@ -262,16 +264,27 @@ class Metric:
     note: str = ""
 
     def compute(self, rows: list[Row]) -> tuple[float | None, str | None, str]:
-        """The value, the fiscal year end it is for, and a remark for the cell."""
+        """The value, the fiscal year end it is for, and a remark for the cell.
+
+        Only the latest fiscal year counts. An older year's value is never put
+        in its place: a reader takes the cell as the latest, whatever it says,
+        and a new consolidator's latest cash flow is missing here although its
+        report has it (2026-11-03 desk tests).
+        """
         if self.series:
             return self.series(rows)
         assert self.value is not None
-        for index in range(len(rows) - 1, -1, -1):
-            previous = rows[index - 1] if index else None
-            value = self.value(rows[index], previous)
-            if value is not None and math.isfinite(value):
-                return value, rows[index]["period_end"], ""
+        value = self._value_at(rows, len(rows) - 1)
+        if value is not None:
+            return value, rows[-1]["period_end"], ""
+        if any(self._value_at(rows, index) is not None for index in range(len(rows) - 1)):
+            return None, None, MISSING_LATEST
         return None, None, ""
+
+    def _value_at(self, rows: list[Row], index: int) -> float | None:
+        assert self.value is not None
+        value = self.value(rows[index], rows[index - 1] if index else None)
+        return value if value is not None and math.isfinite(value) else None
 
 
 def _cagr(rows: list[Row]) -> tuple[float | None, str | None, str]:
@@ -279,6 +292,8 @@ def _cagr(rows: list[Row]) -> tuple[float | None, str | None, str]:
     if len(points) < 2:
         return None, None, ""
     first, last = points[0], points[-1]
+    if last is not rows[-1]:
+        return None, None, MISSING_LATEST
     years = round((date.fromisoformat(last["period_end"])
                    - date.fromisoformat(first["period_end"])).days / 365.25)
     if years < 2:
@@ -549,7 +564,7 @@ def cmd_compare(ctx: Context, args: argparse.Namespace) -> tuple[str, Any]:
             "rank": ranked.index(target_value) + 1 if target_value is not None else None,
             "ranked": len(ranked),
         })
-    notes = _compare_notes(members)
+    notes = _compare_notes(members, results)
     text = _compare_markdown(ctx, members, excluded, results, notes)
     data = {
         "target": target["edinet_code"],
@@ -615,7 +630,7 @@ def _compare_markdown(ctx: Context, members: list[Member], excluded: list[tuple[
         row += [_cell(metric.unit, r["values"][m.company["edinet_code"]],
                       m.rows[-1]["period_end"]) for m in peers]
         body.append(row)
-    lines += ["", "## 指標（各社の最新期。括弧内は使った期・期間）", "", table(header, body)]
+    lines += ["", "## 指標（各社の最新期。括弧内は平均やCAGRの期間）", "", table(header, body)]
 
     lines += ["", "## 売上高の推移（百万円。当期＝各社の最新期）", "",
               _series_table(members, lambda r, p: r["revenue"], "million")]
@@ -680,8 +695,16 @@ def _report_row(ctx: Context, m: Member) -> list[str]:
             (annual.get("submitted_at") or "")[:10] or "—", period or "—"]
 
 
-def _compare_notes(members: list[Member]) -> list[str]:
+def _compare_notes(members: list[Member], results: list[dict[str, Any]]) -> list[str]:
     notes = []
+    for m in members:
+        missing = [r["metric"].label.split("※")[0] for r in results
+                   if r["values"][m.company["edinet_code"]][2] == MISSING_LATEST]
+        if missing:
+            notes.append(
+                f"{short_name(m.company)} は最新期（{fiscal_label(m.rows[-1]['period_end'])}）の"
+                f"値がない指標があります：{'、'.join(missing)}。前の期の値では埋めていません。"
+                "最新期の値は有価証券報告書の本文（キャッシュ・フロー計算書など）で確かめてください。")
     ends = {m.rows[-1]["period_end"] for m in members}
     if len(ends) > 1:
         notes.append("各社の最新期末が異なります（" + "、".join(

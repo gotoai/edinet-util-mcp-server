@@ -12,7 +12,7 @@ Traps this module handles:
 - The 5-year table (経営指標等) uses `…SummaryOfBusinessResults` elements, or
   `…KeyFinancialData` in newer filings (e.g. `jpcrp_cor:RevenueKeyFinancialData`), with
   `IFRS`/`USGAAP`/`JMIS` variants and company-specific extensions (e.g.
-  `jpcrp030000-asr_E00436-000:TotalEquityIFRSSummaryOfBusinessResults`).
+  `jpcrp030000-asr_E00000-000:TotalEquityIFRSSummaryOfBusinessResults`).
 - Element names are not always what they say: the IFRS
   `EquityToAssetRatioIFRSSummaryOfBusinessResults` is book value *per share*
   (unit JPYPerShares). Every field is therefore matched on element and unit.
@@ -66,6 +66,10 @@ JPY = "JPY"
 PURE = "pure"
 PER_SHARE = "JPYPerShares"
 SHARES = "shares"
+
+# Above this a payout ratio is taken as a filer's tagging error and left out: it
+# is a fraction (0.482); some reports tag 48.207 for 48.2%.
+MAX_PAYOUT_RATIO = 10.0
 
 
 @dataclass(frozen=True)
@@ -278,6 +282,9 @@ def extract(facts: list[Fact], *, consolidated: bool | None = None) -> AnnualFig
                             and match["kind"] == spec.kind
                             and bool(match["noncons"]) == noncons):
                         value = _number(fact.value)
+                        if name == "payout_ratio" and value is not None \
+                                and abs(value) > MAX_PAYOUT_RATIO:
+                            continue
                         if value is not None:
                             put(_offset(match), name, value)
                             found = True

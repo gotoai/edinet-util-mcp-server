@@ -78,6 +78,9 @@ def snapshot_db(tmp_path_factory) -> Path:
             for rank, peer in enumerate(peers, 1):
                 db.execute("INSERT INTO peers (edinet_code, peer_code, rank, score, reason)"
                            " VALUES (?, ?, ?, ?, ?)", (code, peer, rank, 1 - rank / 10, "テスト"))
+        # A new consolidator: the latest year's cash flow is not in the 5-year table.
+        db.execute("UPDATE financials SET operating_cf = NULL"
+                   " WHERE edinet_code = 'E00002' AND period_end = '2026-03-31'")
         set_manifest(db, snapshot_id="2026-11-02", source_credit=CREDIT,
                      processing_notice=NOTICE, peer_algorithm="test")
     db.execute("VACUUM")
@@ -180,3 +183,15 @@ def test_sql_is_read_only_and_single_statement(run):
 def test_the_database_folder_stays_untouched(run, snapshot_db):
     run("compare", "5586")
     assert sorted(os.listdir(snapshot_db.parent)) == ["edinet_profiles.sqlite"]
+
+
+def test_a_missing_latest_value_is_never_filled_from_an_earlier_year(run):
+    _, text = run("compare", "5586", "--peers", "5572", "-n", "1", "--json")
+    data = json.loads(text)["data"]
+    metrics = {m["key"]: m for m in data["metrics"]}
+    cell = metrics["operating_cf_margin"]["values"]["E00002"]
+    assert cell == {"value": None, "period_end": None, "remark": "最新期の値なし"}
+    assert metrics["operating_cf_margin"]["peer_median"] is None
+    assert any("Ridge-i は最新期" in note and "営業CFマージン" in note for note in data["notes"])
+    _, markdown = run("compare", "5586", "--peers", "5572", "-n", "1")
+    assert "—（最新期の値なし）" in markdown

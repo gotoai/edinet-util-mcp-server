@@ -42,7 +42,7 @@ into `~/.agents/skills/` (Kari's main app) or import it in an Agent Desk. Its sc
 database read-only in place:
 
 ```sh
-python skill/edinet-company-profiles/scripts/edinet_profiles.py compare 5586 --peers "ABEJA,エクサウィザーズ"
+python skill/edinet-company-profiles/scripts/edinet_profiles.py compare 7203 --peers "7267,7201"
 ```
 
 Commands: `company`, `peers`, `compare`, `filings`, `sql`, `about` (`--json` for structured

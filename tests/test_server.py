@@ -170,7 +170,7 @@ async def test_daily_lists_are_cached_within_a_session(fake):
     ({"from_date": "2026-06-01", "to_date": "2026-07-15"}, "at most 31 days"),
     ({"from_date": "2026-06-26", "to_date": "2026-06-01"}, "must not be before"),
     ({"from_date": "26/06/2026"}, "YYYY-MM-DD"),
-    ({"from_date": "2026-06-26", "edinet_code": "1234"}, "E01152"),
+    ({"from_date": "2026-06-26", "edinet_code": "1234"}, "E02144"),
 ])
 async def test_list_filings_rejects_bad_ranges_and_codes(fake, arguments, message):
     async with Client(mcp) as client:
