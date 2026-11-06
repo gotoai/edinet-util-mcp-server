@@ -18,7 +18,7 @@ not yet published.
 |---|---|
 | `src/edinet_util_mcp_server/` | The package: the MCP server (`server`, `guideline`), filing export (`export`, `convert`), API client (`api`), code list (`codelist`), key figures from the type-5 CSV (`figures`) |
 | `tools/build_profiles.py`, `tools/snapshot/` | The snapshot builder, a development tool not shipped in the wheel |
-| `skill/edinet-company-profiles/` | The skill: `SKILL.md`, `scripts/edinet_profiles.py` (standard library only), `references/financial_diagnosis.md`, `NOTICE`; the builder writes its database to `data/edinet_profiles.sqlite` (not in git) |
+| `skill/edinet-company-profiles/` | The skill: `SKILL.md`, `scripts/edinet_profiles.py` (standard library only), `references/financial_diagnosis.md`, `NOTICE`; `data/edinet_profiles.sqlite`, the database the builder writes, published with the skill |
 
 ## The server
 
