@@ -1,7 +1,7 @@
 edinet-company-profiles
 
-Code (scripts/): MIT License, Copyright (c) 2026 GotoAI Inc. See the LICENSE file of
-edinet-util-mcp-server.
+Code (scripts/): MIT License, Copyright (c) 2026 GotoAI Inc. See the LICENSE file in
+this folder.
 
 Data (data/edinet_profiles.sqlite): processed data derived from documents filed on
 EDINET, used under the Public Data License (Version 1.0) (公共データ利用規約 第1.0版).

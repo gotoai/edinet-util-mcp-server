@@ -1,6 +1,6 @@
 [project]
 name = "edinet-util-mcp-server"
-version = "0.1.0"
+version = "0.2.0"
 description = "A skill-style MCP server for EDINET (金融庁) API v2 disclosures"
 readme = "README.md"
 license = "MIT"
